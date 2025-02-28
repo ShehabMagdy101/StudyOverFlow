@@ -23,7 +23,7 @@
 
         public int ColorId { get; set; }    
         public Color Color { get; set; }   
-        public List<Task> tasks { get; set; }   
+        public List<Task>? tasks { get; set; }   
 
     }
 }

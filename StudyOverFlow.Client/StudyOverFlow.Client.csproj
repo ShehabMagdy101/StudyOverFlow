@@ -22,4 +22,8 @@
     <Folder Include="wwwroot\library\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\StudyOverFlow.DTOs\StudyOverFlow.DTOs.csproj" />
+  </ItemGroup>
+
 </Project>

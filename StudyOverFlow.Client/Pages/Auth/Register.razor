@@ -1,5 +1,5 @@
 ﻿@page "/register"
-@using StudyOverFlow.Client.Models
+@using StudyOverFlow.DTOs.Account
 
 @inject IAccountManagement AccountManagement
 @inject NavigationManager Navigation
@@ -30,7 +30,7 @@
                         <ValidationMessage For="() => Model.UserName" />
                     </div>
                 </div>
-                <div class="row">
+              @*   <div class="row">
 
                     <div class="col-6 form-floating mb-4">
                         <InputText @bind-Value="Model!.FirstName"
@@ -54,7 +54,7 @@
                         <label for="lastName">LastName</label>
                         <ValidationMessage For="() => Model.LastName" />
                     </div>
-                </div>
+                </div> *@
 
 
 
@@ -125,8 +125,7 @@
             {
                 Email = Model!.Email,
                 Password = Model!.Password,
-                FirstName = Model.FirstName,
-                LastName = Model.LastName,
+           
                 UserName = Model.UserName
             });
 

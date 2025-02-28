@@ -1,11 +1,14 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StudyOverFlow.API.Data;
-using StudyOverFlow.API.DTOs.Manage;
 using StudyOverFlow.API.Model;
+using StudyOverFlow.API.Services;
 using StudyOverFlow.API.Services.Caching;
+using StudyOverFlow.DTOs.Manage;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Task = StudyOverFlow.API.Model.Task;
 
 namespace StudyOverFlow.API.Controllers;
@@ -15,11 +18,15 @@ public class TaskController : Controller
 {
     public ApplicationDbContext _dbcontext;
     private readonly IMapper _mapper;
-   
-    public TaskController(ApplicationDbContext dbcontext, IMapper mapper)
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IAutomationService _autoService;
+
+    public TaskController(ApplicationDbContext dbcontext, IMapper mapper, IAutomationService autoService, UserManager<ApplicationUser> userManager)
     {
         _dbcontext = dbcontext;
         _mapper = mapper;
+        _autoService = autoService;
+        _userManager = userManager;
     }
 
     [Authorize]
@@ -44,7 +51,7 @@ public class TaskController : Controller
 
 
     [Authorize]
-    [HttpGet("GetOneUserTask")]
+    [HttpGet("GetOneUserTask/{taskid}")]
     public ActionResult<TaskDto> GetOneTask(int taskid)
     {
 
@@ -109,64 +116,25 @@ public class TaskController : Controller
     [HttpPost("AddTaskToKanbanList")]
     public ActionResult AddTaskToKanbanList(int taskId, string KanbanListTitle, int? controlIndex = null)
     {
-        var task = _dbcontext.Tasks.FirstOrDefault(c => c.TaskId == taskId);
-        if (task is null)
-            return BadRequest("their is no Task with that id");
-        var Kanban = _dbcontext.KanbanLists.FirstOrDefault(c => c.Title == KanbanListTitle);
-        if (Kanban is null)
-            return BadRequest("their is no Kanban list with that title");
-        var existpreivously = _dbcontext.TaskKanbanLists.AsNoTracking().FirstOrDefault(c => c.TaskId == taskId);
-        if (existpreivously is not null)
-        {
-            _dbcontext.Remove(existpreivously);
-            _dbcontext.SaveChanges();
-            _dbcontext.TaskKanbanLists.Where(c => c.KanbanListId == existpreivously.KanbanListId && c.Index >= existpreivously.Index)
-                .ExecuteUpdate(x => x.SetProperty(c => c.Index, e => e.Index - 1));
-            _dbcontext.SaveChanges();
-        }
-
-        var taskkanbanlist = _dbcontext.TaskKanbanLists.Where(c => c.KanbanListId == Kanban.KanbanListId).ToList();
-        var mainindex = (taskkanbanlist.Count() <= 0) ? 0 : taskkanbanlist.Max(c => c.Index);
-
-        if (controlIndex is not null)
-        {
-            _dbcontext.TaskKanbanLists.Where(c => c.KanbanListId == Kanban.KanbanListId && c.Index >= controlIndex)
-                .ExecuteUpdate(x => x.SetProperty(c => c.Index, e => e.Index + 1));
-            _dbcontext.SaveChanges();
-        }
-        _dbcontext.TaskKanbanLists.Add(new TaskKanbanList()
-        {
-            KanbanListId = taskId,
-            TaskId = taskId,
-            Index = mainindex + 1
-        });
-        _dbcontext.SaveChanges();
+        var result = _autoService.AddTaskToKanbanList(taskId, KanbanListTitle, controlIndex);
+        if (!result.success)
+            return BadRequest(result.message);
         return Ok();
     }
     [Authorize]
     [HttpPost("RemoveTaskToKanbanList")]
     public ActionResult RemoveTaskToKanbanList(int taskId)
     {
-        var task = _dbcontext.Tasks.FirstOrDefault(c => c.TaskId == taskId);
-        if (task is null)
-            return BadRequest("their is no Task with that id");
-
-        var existpreivously = _dbcontext.TaskKanbanLists.AsNoTracking().FirstOrDefault(c => c.TaskId == taskId);
-        if (existpreivously is not null)
-        {
-            _dbcontext.Remove(existpreivously);
-            _dbcontext.SaveChanges();
-            _dbcontext.TaskKanbanLists.Where(c => c.KanbanListId == existpreivously.KanbanListId && c.Index >= existpreivously.Index)
-                .ExecuteUpdate(x => x.SetProperty(c => c.Index, e => e.Index - 1));
-            _dbcontext.SaveChanges();
-        }
+        var result = _autoService.RemoveTaskToKanbanList(taskId);
+        if (!result.success)
+            return BadRequest(result.message);
         return Ok();
     }
 
 
     [Authorize]
     [HttpPost("CreateTaskForUser")]
-    public ActionResult CreateTaskForUser(TaskDto model)
+    public ActionResult CreateTaskForUser([FromBody] TaskDto model)
     {
         if (!ModelState.IsValid)
         {
@@ -178,11 +146,28 @@ public class TaskController : Controller
             return BadRequest();
         }
         string id = user.Value;
-
+        model.UserId = id;
         _dbcontext.Add(_mapper.Map<Task>(model));
 
         _dbcontext.SaveChanges();
         return Ok("Task succesfully created");
     }
+    [Authorize]
+    [HttpPost("AddTagToTask")]
+    public ActionResult AddTagToTask([FromBody] AddTagToTaskRequest request)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
+            return Unauthorized();
+        var result = _autoService.AddTagToTask(request,userId );
+        if (!result.success)
+            return BadRequest(result.message);
+        return Ok();
+
+    }
+
+
+
+
 
 }

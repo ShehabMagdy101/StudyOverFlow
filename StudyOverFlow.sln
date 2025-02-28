@@ -4,8 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOverFlow.API", "StudyOverFlow.API\StudyOverFlow.API.csproj", "{D7ED9CDF-138E-4821-AC06-CA23FD01CBDB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A} = {81612200-78A3-4B1D-AE08-93DA16F70F9A}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOverFlow.Client", "StudyOverFlow.Client\StudyOverFlow.Client.csproj", "{908F988C-4C95-41A1-AF91-C6F33C909A65}"
+	ProjectSection(ProjectDependencies) = postProject
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A} = {81612200-78A3-4B1D-AE08-93DA16F70F9A}
+		{D7ED9CDF-138E-4821-AC06-CA23FD01CBDB} = {D7ED9CDF-138E-4821-AC06-CA23FD01CBDB}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudyOverFlow.DTOs", "StudyOverFlow.DTOs\StudyOverFlow.DTOs.csproj", "{81612200-78A3-4B1D-AE08-93DA16F70F9A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +30,10 @@ Global
 		{908F988C-4C95-41A1-AF91-C6F33C909A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{908F988C-4C95-41A1-AF91-C6F33C909A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{908F988C-4C95-41A1-AF91-C6F33C909A65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81612200-78A3-4B1D-AE08-93DA16F70F9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

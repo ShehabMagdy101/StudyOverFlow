@@ -1,4 +1,5 @@
-﻿using StudyOverFlow.Client.Models;
+﻿
+using StudyOverFlow.DTOs.Account;
 
 namespace StudyOverFlow.Client.Identity
 {

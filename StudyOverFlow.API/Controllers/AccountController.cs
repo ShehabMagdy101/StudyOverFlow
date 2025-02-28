@@ -10,14 +10,14 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using StudyOverFlow.API.DTOs.Account;
 using StudyOverFlow.API.Model;
 using StudyOverFlow.API.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Text.Encodings.Web;
-using StudyOverFlow.API.Consts;
 using Microsoft.AspNetCore.Authentication;
+using StudyOverFlow.DTOs.Account;
+using StudyOverFlow.DTOs.Consts;
 
 namespace StudyOverFlow.API.Controllers
 {
@@ -85,14 +85,14 @@ namespace StudyOverFlow.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(LoginDto model)
+        public async Task<ActionResult<UserDto>> Login([FromBody] LoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return Unauthorized("Invalid Usern Name or Password !");
-            if (user.EmailConfirmed == false) return Unauthorized("Please confirm your email !");
+            if (user == null) return Unauthorized("Invalid Email or Password !");
+           // if (user.EmailConfirmed == false) return Unauthorized("Please confirm your email !");
 
             var result = await _signManager.CheckPasswordSignInAsync(user, model.Password, false);
-            if (!result.Succeeded) return Unauthorized("Invalid User Name or Password !");
+            if (!result.Succeeded) return Unauthorized("Invalid Email or Password !");
             var userRole = await _userManager.GetRolesAsync(user);
             //await HttpContext.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity( new Claim[] { 
             //new Claim (ClaimTypes.NameIdentifier , user.Id),
@@ -103,7 +103,7 @@ namespace StudyOverFlow.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             if (await CheckEmailExistAsync(model.Email)) return BadRequest("Email is already exist, please try with another email !");
             var userToAdd = _mapper.Map<ApplicationUser>(model);
@@ -116,18 +116,20 @@ namespace StudyOverFlow.API.Controllers
             var result = await _userManager.CreateAsync(userToAdd, model.Password);
             if (!result.Succeeded) return BadRequest(result.Errors);
             await _userManager.AddToRoleAsync(userToAdd, UserRole.User);
-            try
-            {
-                if (await SendConfirmEmailAsync(userToAdd))
-                {
-                    return Ok(new JsonResult(new { title = "Account Created", message = "Your account has been created, please check your email to confirm !" }));
-                }
-                return BadRequest("Failed to create account, please try again or contact with admin !");
-            }
-            catch (Exception)
-            {
-                return BadRequest("Failed to create account, please try again or contact with admin !");
-            }
+            return Ok(new JsonResult(new { title = "Account Created", message = "Your account has been created, please check your email to confirm !" }));
+
+            //try
+            //{
+            //    if (await SendConfirmEmailAsync(userToAdd))
+            //    {
+            //        return Ok(new JsonResult(new { title = "Account Created", message = "Your account has been created, please check your email to confirm !" }));
+            //    }
+            //    return BadRequest("Failed to create account, please try again or contact with admin !");
+            //}
+            //catch (Exception)
+            //{
+            //    return BadRequest("Failed to create account, please try again or contact with admin !");
+            //}
         }
 
         /*app.UseCors(opt =>

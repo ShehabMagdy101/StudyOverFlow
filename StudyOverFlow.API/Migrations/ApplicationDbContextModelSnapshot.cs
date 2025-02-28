@@ -176,11 +176,9 @@ namespace StudyOverFlow.API.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -205,6 +203,9 @@ namespace StudyOverFlow.API.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ProfileImageURL")
+                        .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -481,12 +482,18 @@ namespace StudyOverFlow.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("type")
                         .HasColumnType("text");
 
                     b.HasKey("TagId");
 
                     b.HasIndex("ColorId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Tags");
                 });
@@ -500,7 +507,6 @@ namespace StudyOverFlow.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TaskId"));
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("EndDate")
@@ -789,7 +795,15 @@ namespace StudyOverFlow.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("StudyOverFlow.API.Model.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Color");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("StudyOverFlow.API.Model.Task", b =>

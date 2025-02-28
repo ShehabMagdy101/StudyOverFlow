@@ -1,0 +1,68 @@
+﻿@page "/subjects"
+@using Blazored.LocalStorage
+@using StudyOverFlow.DTOs.Manage
+@using System.Net.Http.Headers
+@inject IHttpClientFactory HttpClientFactory
+@inject ILocalStorageService _localStorage;
+
+
+<h3>Subjects</h3>
+
+@if (subjects == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var subject in subjects)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card " style="border-radius: 1.25rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">@subject.Title</h5>
+                        <p class="card-text">@(string.IsNullOrEmpty(subject.Description) ?"  ": subject.Description)</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Start Date:</strong> @subject.StartDate.ToString()</li>
+                            <li class="list-group-item"><strong>End Date:</strong> @(subject.EndDate.HasValue ? @subject.EndDate.Value.ToString() : "???")</li>
+                            <li class="list-group-item"><strong>Status:</strong> @(subject.IsChecked ? "Completed" : "Pending")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private IEnumerable<SubjectDto>? subjects;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        string token = await _localStorage.GetItemAsStringAsync("auth");
+        if (string.IsNullOrEmpty(token)){
+            return;
+        }
+
+     
+        // Create an HttpClient instance using the named client
+        var httpClient = HttpClientFactory.CreateClient("Auth");
+
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Fetch data from the API
+        var response = await httpClient.GetAsync("api/Subject/GetUserSubjects");
+
+        if (response.IsSuccessStatusCode)
+        {
+            subjects = await response.Content.ReadFromJsonAsync<IEnumerable<SubjectDto>>();
+        }
+        else
+        {
+            Console.WriteLine("Error fetching data from the API.");
+        }
+    }
+
+
+}

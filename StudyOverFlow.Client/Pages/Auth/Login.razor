@@ -1,6 +1,7 @@
 ﻿@page "/login"
 @using StudyOverFlow.Client.Identity
-@using StudyOverFlow.Client.Models
+@using StudyOverFlow.DTOs.Account
+@using StudyOverFlow.DTOs.Manage
 @inject IJSRuntime JsRuntime
 @inject IAccountManagement AccountManagement
 @inject NavigationManager Navigation
@@ -19,13 +20,13 @@
             <EditForm Model="Model" OnValidSubmit="Submit">
                 <DataAnnotationsValidator />
                 <div class="form-floating mb-4">
-                    <InputText @bind-Value="Model!.UserName"
+                    <InputText @bind-Value="Model!.Email"
                                type="email"
                                class="form-control rounded-2 border-0 bg-gray"
                                id="email"
                                placeholder="" />
                     <label for="email">Email</label>
-                    <ValidationMessage For="() => Model.UserName" />
+                    <ValidationMessage For="() => Model.Email" />
                 </div>
                 <div class="form-floating mb-4">
                     <InputText @bind-Value="Model!.Password"

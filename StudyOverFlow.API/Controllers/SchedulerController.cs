@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
+using Hangfire;
+using Hangfire.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudyOverFlow.API.Data;
-using StudyOverFlow.API.DTOs.Manage;
 using StudyOverFlow.API.Model;
+using StudyOverFlow.API.Services;
 using StudyOverFlow.API.Services.Caching;
+using StudyOverFlow.DTOs.Manage;
 using System.Globalization;
 using System.Security.Claims;
 
@@ -16,26 +19,35 @@ namespace StudyOverFlow.API.Controllers
         private readonly ApplicationDbContext _dbcontext;
         private readonly IMapper _mapper;
         private readonly IRedisCacheService _cache;
-        public SchedulerController(ApplicationDbContext dbcontext, IMapper mapper, IRedisCacheService cache)
+        private readonly IAutomationService _autoService;
+
+        public SchedulerController(ApplicationDbContext dbcontext, IMapper mapper, IRedisCacheService cache, IAutomationService autoService)
         {
             _dbcontext = dbcontext;
             _mapper = mapper;
             _cache = cache;
+            _autoService = autoService;
         }
         [Authorize]
         [HttpPost("AddEvent")]
         public ActionResult AddEvent([FromBody] EventDto model)
         {
+            var ev = _dbcontext.Events.FirstOrDefault(c => c.Title == model.Title);
+            if (ev is not null)
+            {
+                ModelState.AddModelError("Event", "Event Name Already Exist.");
+            }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-          
-            
+
+
+
+
             var user = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
             if (user is null)
                 return BadRequest();
-
             var FindUser = _dbcontext.Users.Include(c => c.Calendar)
                 .FirstOrDefault(c => c.Id == user.Value);
             if (FindUser is null)
@@ -55,23 +67,52 @@ namespace StudyOverFlow.API.Controllers
                 calender = record.Entity;
             }
             calender = FindUser.Calendar!;
-          
+
+            if (calender.Events.Any(c => c.Title == model.Title))
+                return BadRequest("this event already exist");
+
+
             if (!_dbcontext.Colors.Select(c => c.ColorId).Contains(model.ColorId))
                 return BadRequest("color don't exits in the current context.");
             if (model.TotalCount.HasValue && model.TotalCount > 0)
             {
+                var eventsToAdd = new List<Model.Event>();
+
                 for (int i = 0; i < model.TotalCount; i++)
                 {
+
                     var Event = _mapper.Map<Model.Event>(model);
+                    Event.TotalCount = i + 1;
+                    Event.CurrentCount += 1;
                     Event.Date = Event.Date.ToUniversalTime().AddDays(7 * i);
                     Event.CalendarId = calender.CalendarId;
+                    eventsToAdd.Add(Event);
 
-                    _dbcontext.Add(Event);
-                    _dbcontext.SaveChanges();
+                }
+
+                _dbcontext.AddRange(eventsToAdd);
+                _dbcontext.SaveChanges();
+
+                foreach (var Event in eventsToAdd)
+                {
+
+                    if (Event.SubjectId.HasValue || Event.TagId.HasValue || Event.KanbanListId.HasValue)
+                    {
+                        var result = _autoService.AutomateTask(Event, FindUser.Id);
+                        if (!result.success)
+                        {
+                            // Rollback the transaction if automation fails
+                            _dbcontext.Database.CurrentTransaction?.Rollback();
+                            return BadRequest(result.message);
+                        }
+                    }
+
                 }
 
                 return Ok();
             }
+            if ((!model.TotalCount.HasValue) && model.SubjectId.HasValue || model.TagId.HasValue || model.KanbanListId.HasValue)
+                return BadRequest("can't automate event that have no count value");
             var mEvent = _mapper.Map<Model.Event>(model);
             mEvent.Date = mEvent.Date.ToUniversalTime();
             mEvent.CalendarId = calender.CalendarId;
@@ -79,6 +120,14 @@ namespace StudyOverFlow.API.Controllers
             _dbcontext.SaveChanges();
             return Ok();
 
+        }
+
+
+        [Authorize]
+        [HttpPut("MoveEventsOneweek")]
+        public ActionResult MoveEventsOneweek()
+        {
+            return Ok();
         }
 
         [Authorize]
@@ -153,6 +202,13 @@ namespace StudyOverFlow.API.Controllers
 
 
         }
+        //[Authorize]
+        //[HttpPost("DeleteEvent")]
+        //public ActionResult RemoveEvent(int id)
+        //{
+
+        //}
+
 
     }
 }

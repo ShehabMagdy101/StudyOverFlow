@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudyOverFlow.API.Data;
-using StudyOverFlow.API.DTOs.Manage;
 using StudyOverFlow.API.Model;
 using StudyOverFlow.API.Services.Caching;
+using StudyOverFlow.DTOs.Manage;
 using System.Net;
 using System.Security.Claims;
 

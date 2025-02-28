@@ -1,7 +1,8 @@
 ﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
-using StudyOverFlow.Client.Models;
+using StudyOverFlow.DTOs;
+using StudyOverFlow.DTOs.Account;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -79,33 +80,7 @@ public class CookieAuthenticationStateProvider : AuthenticationStateProvider, IA
                     return new AuthenticationState(claims);
             }
 
-            //var requestMessage = new HttpRequestMessage
-            //{
-            //    Method = HttpMethod.Get,
-            //    Content = null,
-            //    RequestUri = new Uri("api/account/refresh-user-token", uriKind: UriKind.Relative)
-
-            //};
-            //requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token is null ? string.Empty : Token);
-            //var userResponse = await _httpClient.SendAsync(requestMessage);
-            ////   userResponse.EnsureSuccessStatusCode();
-
-            //var userJson = await userResponse.Content.ReadAsStringAsync();
-            //var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, _jsonSerializerOptions);
-
-            //if (userInfo is not null)
-            //{
-            //    _authenticated = true;
-
-            //    var claims = new List<Claim>
-            //    {
-            //        new(ClaimTypes.Name, userInfo.Email),
-            //        new(ClaimTypes.Email, userInfo.Email),
-            //    };
-
-            //    var claimsIdentity = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
-            //    user = new ClaimsPrincipal(claimsIdentity);
-            //}
+           
         }
         catch (Exception ex)
         {
@@ -217,11 +192,11 @@ public class CookieAuthenticationStateProvider : AuthenticationStateProvider, IA
         {
             var result = await _httpClient.PostAsJsonAsync("api/Account/login", new
             {
-                credentials.UserName,
+                credentials.Email,
                 credentials.Password,
             });
-
-
+            
+            
             if (result.IsSuccessStatusCode)
             {
 

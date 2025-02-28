@@ -1,4 +1,4 @@
-﻿using StudyOverFlow.API.Consts;
+﻿using StudyOverFlow.DTOs.Consts;
 
 namespace StudyOverFlow.API.Model
 {
